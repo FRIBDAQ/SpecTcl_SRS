@@ -1,0 +1,110 @@
+/* Copyright (C) 2018-2021 European Spallation Source, ERIC. See LICENSE file */
+/* Modified version of the original source code ParserSRS.cpp
+    This software is Copyright by the Board of Trustees of Michigan
+    State University (c) Copyright 2014.
+
+    You may use this software under the terms of the GNU public license
+    (GPL).  The terms of this license are described at:
+
+     http://www.gnu.org/licenses/gpl.txt
+
+    Author:
+             Simon Giraud
+       FRIB
+       Michigan State University
+       East Lansing, MI 48824-1321
+*/
+//===----------------------------------------------------------------------===//
+///
+/// \file
+///
+/// \brief Class to process datagram from Gd-GEM detector readout
+/// from VMM3 ASICS via the SRS readout system
+///
+//===----------------------------------------------------------------------===//
+
+#include <arpa/inet.h>
+#include <cinttypes>
+#include <cstdio>
+#include <string.h>
+#include <iostream>
+#include "ParserSRS.h"
+
+namespace Gem
+{
+
+  ParserSRS::ParserSRS(int maxelements, SRSTime time_intepreter) : maxHits(maxelements),
+                                                                   srsTime(time_intepreter)
+  {
+    markers = new VMM3Marker[MaxFECs * MaxVMMs];
+    data = new VMM3Data[maxHits];
+  }
+
+  /// Delete allocated data, set pointers to nullptr
+  ParserSRS::~ParserSRS()
+  {
+    delete[] data;
+    data = nullptr;
+    delete[] markers;
+    markers = nullptr;
+  }
+
+  int ParserSRS::parse(uint32_t data1, uint16_t data2, VMM3Data *vd)
+  {
+    int dataflag = (data2 >> 15) & 0x1;
+    std::cout << "Simon - dataflag "
+              << " " << dataflag << std::endl;
+    if (dataflag)
+    {
+      /// Data
+
+      vd->overThreshold = (data2 >> 14) & 0x01;
+      vd->chno = (data2 >> 8) & 0x3f;
+      vd->tdc = data2 & 0xff;
+      vd->vmmid = (data1 >> 22) & 0x1F;
+      vd->triggerOffset = (data1 >> 27) & 0x1F;
+      uint16_t idx = (pd.fecId - 1) * MaxVMMs + vd->vmmid;
+      if (vd->triggerOffset < markers[idx].lastTriggerOffset)
+      {
+        if (markers[idx].calcTimeStamp != 0)
+        {
+          markers[idx].calcTimeStamp += 32 * srsTime.trigger_period_ns() / SRSTime::internal_SRS_clock_period_ns;
+        }
+      }
+      markers[idx].lastTriggerOffset = vd->triggerOffset;
+      vd->adc = (data1 >> 12) & 0x3FF;
+      vd->bcid = BitMath::gray2bin32(data1 & 0xFFF);
+      /// \todo Maybe here use the calculated timestamp instead
+      /// vd->fecTimeStamp = markers[idx].calcTimeStamp;
+      vd->fecTimeStamp = markers[idx].fecTimeStamp;
+      std::cout << "Simon null fecTimeStamp " << vd->fecTimeStamp << std::endl;
+      if (vd->fecTimeStamp > 0)
+      {
+        markers[idx].hasDataMarker = true;
+        vd->hasDataMarker = true;
+        std::cout << "Simon parserSrs " << vd->fecTimeStamp << " " << vd->hasDataMarker << std::endl;
+      }
+      return 1;
+    }
+    else
+    {
+      /// Marker
+      uint8_t vmmid = (data2 >> 10) & 0x1F;
+      uint16_t idx = (pd.fecId - 1) * MaxVMMs + vmmid;
+      uint64_t timestamp_lower_10bit = data2 & 0x03FF;
+      uint64_t timestamp_upper_32bit = data1;
+
+      uint64_t timestamp_42bit = (timestamp_upper_32bit << 10) + timestamp_lower_10bit;
+
+      if (markers[idx].calcTimeStamp == 0)
+      {
+        markers[idx].calcTimeStamp = timestamp_42bit;
+      }
+      markers[idx].fecTimeStamp = timestamp_42bit;
+
+      std::cout << "Simon parserSrs - in markers " << markers[idx].fecTimeStamp << " " << std::endl;
+      return 0;
+    }
+  }
+
+}

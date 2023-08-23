@@ -1,0 +1,63 @@
+Geometry 4,3
+# /simon/SRS/specTcl_SRS_new/adcSumNew.win Written by @(#)dispwind.cc	2.2 1/28/94  at Sat Jul  8 17:50:57 2023
+
+Window  0,0,"srs.fec6.vmm1.adc.sum"
+   SCALE Manual 256
+   MAPPED 1
+   Rendition Color
+Endwindow
+Window  1,0,"srs.fec6.vmm2.adc.sum"
+   SCALE Manual 256
+   MAPPED 1
+   Rendition Color
+Endwindow
+Window  2,0,"srs.fec6.vmm3.adc.sum"
+   SCALE Manual 256
+   MAPPED 1
+   Rendition Color
+Endwindow
+Window  3,0,"srs.fec6.vmm4.adc.sum"
+   SCALE Manual 256
+   MAPPED 1
+   Rendition Color
+Endwindow
+Window  0,1,"srs.fec6.vmm5.adc.sum"
+   SCALE Manual 256
+   MAPPED 1
+   Rendition Color
+Endwindow
+Window  1,1,"srs.fec6.vmm6.adc.sum"
+   SCALE Manual 256
+   MAPPED 1
+   Rendition Color
+Endwindow
+Window  2,1,"srs.fec6.vmm7.adc.sum"
+   SCALE Manual 256
+   MAPPED 1
+   Rendition Color
+Endwindow
+Window  3,1,"srs.fec6.vmm8.adc.sum"
+   SCALE Manual 256
+   MAPPED 1
+   Rendition Color
+Endwindow
+Window  0,2,"srs.fec6.vmm9.adc.sum"
+   SCALE Manual 256
+   MAPPED 1
+   Rendition Color
+Endwindow
+Window  1,2,"srs.fec6.vmm10.adc.sum"
+   SCALE Manual 256
+   MAPPED 1
+   Rendition Color
+Endwindow
+Window  2,2,"srs.fec6.vmm11.adc.sum"
+   SCALE Manual 256
+   MAPPED 1
+   Rendition Color
+Endwindow
+Window  3,2,"srs.fec6.vmm11.adc.sum"
+   SCALE Manual 256
+   MAPPED 1
+   Rendition Color
+Endwindow
