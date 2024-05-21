@@ -1,4 +1,5 @@
-/*  This software is Copyright by the Board of Trustees of Michigan
+/*
+    This software is Copyright by the Board of Trustees of Michigan
     State University (c) Copyright 2014.
 
     You may use this software under the terms of the GNU public license
@@ -12,43 +13,36 @@
        Michigan State University
        East Lansing, MI 48824-1321
 */
-#ifndef __CSRSANALYZER_H
-#define __CSRSANALYZER_H
+#ifndef CSRSUnpacker_H
+#define CSRSUnpacker_H
 
+#include <config.h>
+#include <EventProcessor.h>
+#include <TreeParameter.h>
+#include <cstdint>
+#include <cstddef>
 #include <memory>
 
-#include "CSRSUnpacker.h"
-#include "CSRS.h"
+#include "ParserSRS.h"
 
-
-class CSRSAnalyzer : public CEventProcessor
+class CSRSUnpacker : public CEventProcessor
 {
 private:
-
-  // Cluster time (position e-drift axis) methods
-  void averageT();
-  void cogT();
-  void cog2T();
-  void firstTime();
-  void lastTime();
-
-  // Cluster position (channel axis) methods
-  void averageP();
-  void cogP();
-  void cog2P();
-
-  // Cluster charge methods
-  void averageQ();
-  void totalQ();
+  // With C++14 use unique_ptr
+  // std::unique_ptr<Gem::ParserSRS> parser;
+  Gem::ParserSRS *parser{nullptr};
 
 public:
-  CSRSAnalyzer();
-  virtual ~CSRSAnalyzer();
+  CSRSUnpacker();
+  virtual ~CSRSUnpacker();
 
   virtual Bool_t operator()(const Address_t pEvent,
                             CEvent &rEvent,
                             CAnalyzer &rAnalyzer,
                             CBufferDecoder &rDecoder);
+
+  Bool_t unpack(std::uint32_t *begin,
+                std::size_t sizeInByte);
 };
 
 #endif

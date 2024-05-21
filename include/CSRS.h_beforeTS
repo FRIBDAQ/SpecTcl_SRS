@@ -22,6 +22,7 @@
 #include <TCLResult.h>
 #include <TranslatorPointer.h>
 #include <stdexcept>
+/* #include <string> */
 
 #include "ParserSRS.h"
 #include "CSRSCalibrator.h"
@@ -32,6 +33,23 @@ using namespace std;
 
 extern class CSRS srs;
 
+// VMM
+class CSRSVmm
+{
+public:
+    void Initialize(CSRS *top, string name, int fecId, int vmmId);
+    void Reset();
+    virtual ~CSRSVmm();
+    CTreeParameterArray adc;
+    CTreeParameterArray adcCal;
+    CTreeParameterArray tdc;
+    CTreeParameterArray correctedTime;
+    Bool_t hasdata;
+
+private:
+    CSRS *top;
+};
+
 // FEC
 class CSRSFec
 {
@@ -39,24 +57,8 @@ public:
     void Initialize(CSRS *top, string name, int fecId);
     void Reset();
     virtual ~CSRSFec();
-    // bool overThreshold{false};
-    CTreeParameter timeStamp; 
-    CTreeParameter timeStampDiff; 
-    CTreeParameter nHits;
-    CTreeParameter evt;
-    CTreeParameterArray adc;
-    CTreeParameterArray tdc;
-    CTreeParameter adcAvg;
-    CTreeParameter tdcAvg;
-    CTreeParameter posAvg;
-    CTreeParameterArray adcCal;
-    CTreeParameterArray timeCal;
-
-    CTreeParameter timeCluster;
-    CTreeParameter posCluster;
-    CTreeParameter chargeCluster;
-
-
+    CSRSVmm vmm[MaxVMMs];
+    bool overThreshold{false};
 
 private:
     CSRS *top;
@@ -72,35 +74,21 @@ public:
     void Initialize();
     string m_name;
 
-
     CTreeParameter runtime;
+    CTreeParameter eventlength;
     CTreeParameter nHits;
-    // CTreeParameter nbEvents;
     CTreeVariable debugMode;
-    CTreeVariable timeMethod;
-    CTreeVariable posMethod;
-    CTreeVariable chargeMethod;
 
-    int nbEvt = {0};
-    
-    uint64_t timeStampPrev[MaxFECs] = {0};
-
-    bool fecInitialized[MaxFECs] = {false};
-
-
+    // SRS(FEC(VMM(adc,tdc...)))
     CSRSFec fec[MaxFECs];
-
-    /// Data analyzed related to a single Hit
-    struct dataAnalyzed
-    {
-        double chargeCluster;
-        double timeCluster;
-        double posCluster; 
-    };
 
     void SetDataRaw(Gem::ParserSRS::VMM3Data *dataArray);
     void SetDataCal(Gem::ParserSRS::VMM3DataCal *dataCalArray);
-    void SetDataAnalyzed(dataAnalyzed *data, std::string var);
+    /* void SetDataCal(std::unique_ptr<Gem::ParserSRS::VMM3DataCal[]> dataCalArray); */
+    void SetDataParser(Gem::ParserSRS::ParserData pd)
+    {
+        dataParser = pd;
+    };
 
     Gem::ParserSRS::VMM3Data *GetDataRaw() const
     {
@@ -114,6 +102,10 @@ public:
         }
         throw std::runtime_error("CSRS - dataRaw is null");
     };
+    Gem::ParserSRS::ParserData GetDataParser() const
+    {
+        return dataParser;
+    };
     Gem::ParserSRS::VMM3DataCal &GetDataCal(int index) const
     {
         if (dataCal != nullptr)
@@ -122,22 +114,18 @@ public:
         }
         throw std::runtime_error("CSRS - dataCal is null");
     };
-
-    dataAnalyzed &GetDataAna(int index) const
-    {
-        if (dataAna != nullptr)
-        {
-            return dataAna[index];
-        }
-        throw std::runtime_error("CSRS - dataAna is null");
-    };
+    /* VMM3DataCal& GetDataCal(int index) const { */
+    /*     if (dataCal != nullptr) { */
+    /*         return dataCal[index]; */
+    /*     } */
+    /*     throw std::runtime_error("CSRS - dataCal is null"); */
+    /* }; */
 
 private:
-
+    /* Configuration m_config; */
     Gem::ParserSRS::VMM3Data *dataRaw{nullptr};
     Gem::ParserSRS::VMM3DataCal *dataCal{nullptr};
-    dataAnalyzed *dataAna{nullptr};
-
+    Gem::ParserSRS::ParserData dataParser;
 };
 
 #endif

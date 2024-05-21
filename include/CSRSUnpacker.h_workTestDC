@@ -80,6 +80,8 @@ public:
                             CAnalyzer &rAnalyzer,
                             CBufferDecoder &rDecoder);
 
+  // Bool_t unpack(std::uint32_t *begin,
+  //               std::size_t sizeInByte);
   Bool_t unpack(std::uint32_t *begin,
                 std::uint16_t sizeInNbHit);
 

@@ -1,0 +1,43 @@
+Geometry 3,3
+# /user/0400x/srs/specTcl_SRS/windows/adcTestIC.win Written by @(#)dispwind.cc	2.2 1/28/94  at Wed Apr  3 09:39:29 2024
+
+Window  0,0,"srs.fec2.vmm8.adc"
+   SCALE Manual 256
+   MAPPED 1
+   Rendition Color
+Endwindow
+Window  1,0,"srs.fec2.vmm9.adc"
+   SCALE Manual 256
+   MAPPED 1
+   Rendition Color
+Endwindow
+Window  2,0,"srs.fec2.vmm10.adc"
+   SCALE Manual 256
+   MAPPED 1
+   Rendition Color
+Endwindow
+Window  0,1,"srs.fec2.vmm11.adc"
+   SCALE Manual 256
+   MAPPED 1
+   Rendition Color
+Endwindow
+Window  1,1,"srs.fec2.vmm12.adc"
+   SCALE Manual 256
+   MAPPED 1
+   Rendition Color
+Endwindow
+Window  2,1,"srs.fec2.vmm13.adc"
+   SCALE Manual 256
+   MAPPED 1
+   Rendition Color
+Endwindow
+Window  0,2,"srs.fec2.vmm14.adc"
+   SCALE Manual 256
+   MAPPED 1
+   Rendition Color
+Endwindow
+Window  1,2,"srs.fec2.vmm15.adc"
+   SCALE Manual 256
+   MAPPED 1
+   Rendition Color
+Endwindow

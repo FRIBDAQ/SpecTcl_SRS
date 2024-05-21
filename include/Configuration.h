@@ -23,7 +23,9 @@
 #include <vector>
 
 #define NUMFECS 385
-static const int MaxVMMs{16}; ///Maximum number of VMMs per FEC card
+//static const int MaxVMMs{16}; ///Maximum number of VMMs per FEC card
+static const int MaxVMMs{32}; ///Maximum number of VMMs + 16 ext. trigger marker
+static const int MaxVMMsData{16}; ///Maximum number of VMMs per FEC card
 static const int MaxFECs{16}; ///Maximum number of FECs per EFU
 
 extern class Configuration config;

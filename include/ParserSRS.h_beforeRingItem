@@ -39,13 +39,12 @@ namespace Gem
   public:
     /// \brief create a data handler for VMM3 SRS data of fixed size Capacity
     /// \param maxelements The maximum number of readout elements
-    ParserSRS(int maxelements);
+    ParserSRS(int maxelements, SRSTime time_intepreter);
     virtual ~ParserSRS();
     // bytes
     static const int SRSHeaderSize{16};
-    static const int HitAndMarkerSize{8};
+    static const int HitAndMarkerSize{6};
     static const int Data1Size{4};
-    static const int Data2Size{2};
 
     ///< Do NOT rearrange fields, used for casting to data pointer
     struct SRSHeader
@@ -68,25 +67,13 @@ namespace Gem
     };
 
     /// Data common to all hits and markers, or other parser related data
-    // struct ParserData
-    // {
-    //   uint8_t fecId{1};
-    //   uint32_t nextFrameCounter{0};
-    // };
+    struct ParserData
+    {
+      uint8_t fecId{1};
+      uint32_t nextFrameCounter{0};
+    };
 
     /// Data related to a single Hit
-    // struct VMM3Data
-    // {
-    //   uint64_t fecTimeStamp; /// 42 bits can change within a packet so must be here
-    //   uint16_t bcid;         /// 12 bit - bcid after graydecode
-    //   uint16_t adc;          /// 10 bit - adc value from vmm readout
-    //   uint8_t tdc;           ///  8 bit - tdc value from vmm readout
-    //   uint8_t chno;          ///  6 bit - channel number from readout
-    //   uint8_t overThreshold; ///  1 bit - over threshold flag for channel from readout
-    //   uint8_t vmmid;         ///  5 bit - asic identifier - unique id per fec 0 - 15
-    //   uint8_t triggerOffset; ///  5 bit
-    //   bool hasDataMarker;    ///
-    // };
     struct VMM3Data
     {
       uint64_t fecTimeStamp; /// 42 bits can change within a packet so must be here
@@ -94,10 +81,8 @@ namespace Gem
       uint16_t adc;          /// 10 bit - adc value from vmm readout
       uint8_t tdc;           ///  8 bit - tdc value from vmm readout
       uint8_t chno;          ///  6 bit - channel number from readout
-      uint16_t chnoMapped;   ///  16 bit - channel number mapped
       uint8_t overThreshold; ///  1 bit - over threshold flag for channel from readout
       uint8_t vmmid;         ///  5 bit - asic identifier - unique id per fec 0 - 15
-      uint8_t fecid;         /// 
       uint8_t triggerOffset; ///  5 bit
       bool hasDataMarker;    ///
     };
@@ -110,29 +95,22 @@ namespace Gem
       uint16_t adc;          /// 10 bit - adc value from vmm readout
       uint8_t tdc;           ///  8 bit - tdc value from vmm readout
       uint8_t chno;          ///  6 bit - channel number from readout
-      uint16_t chnoMapped;   ///  16 bit - channel number mapped
       uint8_t overThreshold; ///  1 bit - over threshold flag for channel from readout
       uint8_t vmmid;         ///  5 bit - asic identifier - unique id per fec 0 - 15
-      uint8_t fecid;         /// 
       double correctedTime;  ///
     };
-
-    void reset();
 
     /// \brief parse the readouts into a data array
     /// \param data1 the raw (unbitreversed) data1 field of a SRS packet
     /// \param data2 the raw (unbitreversed) data2 field of a SRS packet
     /// \param vmd VMM2Data structure holding the parsed data (tdc, bcid, adc, ...)
-    // int parse(uint32_t data1, uint16_t data2, VMM3Data *vmd);
-    int parse(uint32_t data1, uint16_t data2, uint16_t data3, VMM3Data *vmd);
-
-    uint16_t invertByteOrder(uint16_t data);
+    int parse(uint32_t data1, uint16_t data2, VMM3Data *vmd);
 
     /// Holds data common to all readouts in a packet
     SRSHeader hdr;
 
     /// See description above
-    //ParserData pd;
+    ParserData pd;
 
     /// holds all readout data in a packet (up to max_elems)
     VMM3Data *data{nullptr};

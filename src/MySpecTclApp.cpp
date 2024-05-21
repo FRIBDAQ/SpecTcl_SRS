@@ -12,6 +12,7 @@ static const char* Copyright = "(C) Copyright Michigan State University 2008, Al
 
 #include "Configuration.h"
 #include "CSRS.h"
+#include "CalibrationFile.h"
 #include "CSRSUnpacker.h"
 #include "CSRSCalibrator.h"
 #include "CSRSAnalyzer.h"
@@ -24,11 +25,13 @@ using namespace std;
 Configuration config("config");
 //CSRS: where the data used in the treegui are defined
 CSRS srs("srs");
-//CSRSUnpacker: unpacks and feeds the srs class
+//Gem::CalibrationFile class to load the calibrations from a file
+CalibrationFile calib;
+//CSRSUnpacker: unpacks and sets variables in srs class
 CSRSUnpacker Stage1;
-//CSRSCalibrator: where adc and time are calibrated, it feeds the srs class
+//CSRSCalibrator: where adc and time are calibrated, sets variables in srs class
 CSRSCalibrator Stage2;
-//CSRSAnalyzer: where parameters from adc and time are computed, it feeds the srs class 
+//CSRSAnalyzer: where clustering is done (could add other kind of analysis here too), sets variables in srs class 
 CSRSAnalyzer Stage3;
 
 
@@ -58,13 +61,12 @@ CMySpecTclApp::CreateAnalysisPipeline(CAnalyzer& rAnalyzer)
 #ifdef WITHF77UNPACKER
   RegisterEventProcessor(legacyunpacker);
 #endif
-    RegisterEventProcessor(Stage1, "Unpacking");
-    RegisterEventProcessor(Stage2, "Calibration");
-    RegisterEventProcessor(Stage3, "Analysis");
+  RegisterEventProcessor(Stage1, "Unpacking");
+  RegisterEventProcessor(Stage2, "Calibration");
+  RegisterEventProcessor(Stage3, "Analysis");
 }  
 
 // Constructors, destructors and other replacements for compiler cannonicals:
-
 CMySpecTclApp::CMySpecTclApp ()
 {   
   //Probably a better way than hardcoding the name here...
@@ -73,11 +75,17 @@ CMySpecTclApp::CMySpecTclApp ()
     printf("VMM config file loaded");
     //The fecId and vmmId expected in the data are passed to srs class 
     //to fill the treegui only with the necessary data.
-    //Loading time significant if one allows all combinations of FEC x VMM
     srs.Initialize();
   } 
   else{
     printf("VMM config file NOT loaded");
+  } 
+  bool calibrationLoaded = calib.loadFile(config.pCalFilename);
+  if (calibrationLoaded){
+    printf("Calibrations loaded");
+  } 
+  else{
+    printf("Calibrations not loaded");
   } 
 } 
 

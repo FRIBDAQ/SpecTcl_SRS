@@ -12,8 +12,7 @@
 #include <string>
 #include <vector>
 
-namespace Gem
-{
+
   /// \todo check whether packing is necessary, static assert assert?
   struct Calibration
   {
@@ -36,6 +35,8 @@ namespace Gem
     float timewalk_d{0.0};
   };
 
+  extern class CalibrationFile calib;
+
   class CalibrationFile
   {
   public:
@@ -47,7 +48,8 @@ namespace Gem
     CalibrationFile() = default;
 
     /// \brief load calibration from json file
-    explicit CalibrationFile(std::string filename);
+    //explicit CalibrationFile(std::string filename);
+    bool loadFile(std::string filename);
 
     /// \brief loads calibration from json string
     void loadCalibration(std::string calibration);
@@ -72,4 +74,3 @@ namespace Gem
     /// Default correction
     Calibration NoCorr{0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0};
   };
-} // namespace Gem

@@ -24,7 +24,6 @@
 #define MAX_BITS 33
 #define NUM_BCID 5
 
-/* struct VMM3DataCal; */
 
 class CSRSCalibrator : public CEventProcessor
 {

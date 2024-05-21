@@ -38,39 +38,66 @@ using namespace std;
 CSRS::CSRS(string name)
 {
     m_name = name;
+    // dataAna = new dataAnalyzed;
 }
 
 CSRS::~CSRS()
 {
-    delete[] dataRaw;
-    dataRaw = nullptr;
-    delete[] dataCal;
-    dataCal = nullptr;
+    // if (dataRaw != nullptr) {
+    //   delete[] dataRaw;
+    //   dataRaw = nullptr;
+    // }
+    // if (dataCal != nullptr) {
+    //   delete[] dataCal;
+    //   dataCal = nullptr;
+    // }
+    // if (dataAna != nullptr) {
+    //   delete[] dataAna;
+    //   dataAna = nullptr;
+    // }
 }
 
 void CSRS::Initialize()
 {
     runtime.Initialize(m_name + ".runtime", "sec");
-    eventlength.Initialize(m_name + ".eventlength", 8193, 0, 8192, "bytes");
     nHits.Initialize(m_name + ".nHits", 2000, 0, 2000, "");
+
     debugMode.Initialize(m_name + ".debugMode", 0, "debug");
+
+    // Set to default, 9 is not a method so will go to switch default 
+    timeMethod.Initialize(m_name + ".timeMethod", 9, "time calc. method");
+    posMethod.Initialize(m_name + ".posMethod", 9, "position calc. method");
+    chargeMethod.Initialize(m_name + ".chargeMethod", 9, "charge calc. method");
 
     for (int i = 0; i < MaxFECs; i++)
     {
-        string fecIdStr = to_string(i);
-        fec[i].Initialize(this, m_name + ".fec" + fecIdStr, i);
+        for (int j = 0; j < MaxVMMsData; j++)
+        {
+            if (config.pFecVmm[i][j] && !fecInitialized[i])
+            {
+                string fecIdStr = to_string(i);
+                fec[i].Initialize(this, m_name + ".fec" + fecIdStr, i);
+                fecInitialized[i] = true;
+            }
+        }
     }
 }
 
 void CSRS::Reset()
 {
     runtime.Reset();
-    eventlength.Reset();
     nHits.Reset();
 
     for (int i = 0; i < MaxFECs; i++)
     {
-        fec[i].Reset();
+        for (int j = 0; j < MaxVMMsData; j++)
+        {
+            if (config.pFecVmm[i][j])
+            {
+                fec[i].Reset();
+                break;
+            }
+        }
     }
 }
 
@@ -78,21 +105,31 @@ void CSRS::Reset()
 // class CSRSFec
 CSRSFec::~CSRSFec()
 {
-    delete top;
-    top = nullptr;
+    // if (top != nullptr) {
+    //   delete[] top;
+    //   top = nullptr;
+    // }
 }
 
 void CSRSFec::Initialize(CSRS *theTop, string name, int fecId)
 {
     top = theTop;
 
-    for (int i = 0; i < MaxVMMs; i++)
-    {
-        string vmmIdStr = to_string(i);
-        vmm[i].Initialize(top, name + ".vmm" + vmmIdStr, fecId, i);
-    }
+    evt.Initialize(name + ".evt", "");
+    nHits.Initialize(name + ".nHits", "");
+    adc.Initialize(name + ".adc", 1024, 0.0, 1023.0, "channels", 512, 0);
+    tdc.Initialize(name + ".tdc", 1024, 0.0, 1023.0, "channels", 512, 0);
+    timeStamp.Initialize(name + ".timeStamp", "tick");
+    timeStampDiff.Initialize(name + ".timeStampDiff", "tick");
+    adcCal.Initialize(name + ".adcCal", 1024, 0.0, 1023.0, "channels", 512, 0);
+    timeCal.Initialize(name + ".timeCal", 5000, 0.0, 50000.0, "channels", 512, 0);
 
-    overThreshold = false;
+    timeCluster.Initialize(name + ".timeCluster", "");
+    posCluster.Initialize(name + ".posCluster", "");
+    chargeCluster.Initialize(name + ".chargeCluster", "");
+
+
+    // overThreshold = false;
     // if (top->debugMode)
     // {
     //     cou<<"debug..."<<endl;
@@ -101,91 +138,82 @@ void CSRSFec::Initialize(CSRS *theTop, string name, int fecId)
 
 void CSRSFec::Reset()
 {
-    for (int i = 0; i < MaxVMMs; i++)
-    {
-        vmm[i].Reset();
-    }
-}
-
-//---------------------------------------------------------//
-// class CSRSVmm
-CSRSVmm::~CSRSVmm()
-{
-    delete top;
-    top = nullptr;
-}
-
-void CSRSVmm::Initialize(CSRS *theTop, string name, int fecId, int vmmId)
-{
-    top = theTop;
-    if (config.pFecVmm[fecId][vmmId])
-    {
-        cout << "Name - " << name << endl;
-        adc.Initialize(name + ".adc", 1024, 0.0, 1023.0, "channels", 64, 0);
-        adcCal.Initialize(name + ".adcCal", 1024, 0.0, 1023.0, "channels", 64, 0);
-        tdc.Initialize(name + ".tdc", 256, 0.0, 255.0, "channels", 64, 0);
-        correctedTime.Initialize(name + ".correctedTime", 10000, 0.0, 1000000.0, "a.u.", 64, 0);
-    }
-    // if (top->debugMode)
-    // {
-    //     cou<<"debug..."<<endl;
-    // }
-}
-
-void CSRSVmm::Reset()
-{
+    evt.Reset();
+    nHits.Reset();
     adc.Reset();
-    adcCal.Reset();
     tdc.Reset();
-    correctedTime.Reset();
-    hasdata = kfFALSE;
+    timeStamp.Reset();
+    timeStampDiff.Reset();
+    adcCal.Reset();
+    timeCal.Reset();
+    timeCluster.Reset();
+    posCluster.Reset();
+    chargeCluster.Reset();
+
 }
 
 void CSRS::SetDataRaw(Gem::ParserSRS::VMM3Data *dataArray)
 {
+    int nbHitsFec[MaxFECs] = {0};
+
     for (int i = 0; i < srs.nHits; i++)
     {
         auto &d = dataArray[i];
-        int fecId = dataParser.fecId;
+        int fecId = d.fecid;
         int vmmId = d.vmmid;
         int chNo = d.chno;
+        int chNoMapped = d.chnoMapped;
+        /*!!!! changed chNoMapped here for test !!!!*/
+        // int chNoMapped = d.chno;
+        /*!!!! changed chNoMapped here for test !!!!*/
 
-        // printf("SRS Data: fec: %d, vmm: %d, channel: %d, overThreshold: %d, adc: %d, tdc: %d, fecTimeStamp: %d, triggerOffset: %d  \n",dataParser.fecId,d.vmmid, d.chno, d.overThreshold, d.adc, d.tdc,d.fecTimeStamp,d.triggerOffset);
-        if (config.pFecVmm[fecId][vmmId])
+
+        // printf("SetDataRaw: fec: %d, vmm: %d, channel: %d, channelMapped: %d, overThreshold: %d, adc: %d, tdc: %d, fecTimeStamp: %llu, triggerOffset: %d  \n",d.fecid,d.vmmid, d.chno, chNoMapped, d.overThreshold, d.adc, d.tdc,d.fecTimeStamp,d.triggerOffset);
+        if (vmmId < MaxVMMsData && config.pFecVmm[fecId][vmmId])
         {
-            srs.fec[fecId].vmm[vmmId].adc[chNo] = d.adc;
-            srs.fec[fecId].vmm[vmmId].tdc[chNo] = d.tdc;
-            srs.fec[fecId].vmm[vmmId].hasdata = true;
+            srs.fec[fecId].timeStamp = d.fecTimeStamp;
+            srs.fec[fecId].adc[chNoMapped] = d.adc;
+            srs.fec[fecId].tdc[chNoMapped] = d.tdc;
+            nbHitsFec[fecId] += 1;
+            srs.fec[fecId].nHits = nbHitsFec[fecId];
+            if (timeStampPrev[fecId] >= 0){
+                srs.fec[fecId].timeStampDiff = d.fecTimeStamp - timeStampPrev[fecId];
+                // std::cout<<"Simon - TSdiff "<<srs.fec[fecId].timeStampDiff<<std::endl;
+            }
+            timeStampPrev[fecId] = d.fecTimeStamp;
         }
         else
         {
             printf("CSRS::SetDataRaw - fecId: %d or/and vmmId: %d not listed in the configuration file, the corresponding data will not be in the treegui \n", fecId, vmmId);
         }
-
     } // for hits
     dataRaw = dataArray;
 }
 
 void CSRS::SetDataCal(Gem::ParserSRS::VMM3DataCal *dataCalArray)
 {
-    for (int i = 0; i < srs.nHits; i++)
-    {
-        auto &d = dataCalArray[i];
-        int fecId = dataParser.fecId;
-        int vmmId = d.vmmid;
-        int chNo = d.chno;
-
-        // printf("SRS Data Cal: fec: %d, vmm: %d, channel: %d, overThreshold: %d, adc cal.: %d, tdc: %d, timeStamp: %d, correctedTime: %d  \n",dataParser.fecId,d.vmmid, d.chno, d.overThreshold, d.adc, d.tdc,d.timeStamp,d.correctedTime);
-        if (config.pFecVmm[fecId][vmmId])
-        {
-            srs.fec[fecId].vmm[vmmId].adcCal[chNo] = d.adc;
-            srs.fec[fecId].vmm[vmmId].correctedTime[chNo] = d.correctedTime;
-        }
-        // else {
-        // warning already printed for raw data
-        // printf("CSRS::SetDataCal - fecId: %d or/and vmmId: %d not listed in the configuration file, the corresponding data will not be in the treegui \n",fecId,vmmId);
-        // }
-
-    } // for hits
     dataCal = dataCalArray;
 }
+
+//Set tree parameters after analysis
+void CSRS::SetDataAnalyzed(dataAnalyzed *data, std::string var = "all")
+{
+
+    // if (var == "all"){
+    //     dataAna = data;
+    // }
+    // else if (var == "time"){
+    //     dataAna->timeCluster = data->timeCluster;
+    // }
+    // else if (var == "position"){
+    //     dataAna->posCluster = data->posCluster;
+    // }
+    // else if (var == "charge"){
+    //     dataAna->chargeCluster = data->chargeCluster;
+    // }
+    // else {
+    //     std::cout<<"CSRS::SetDataAnalyzed - var: "<<var<<" not recognized"<<std::endl;
+    // }
+
+}
+

@@ -33,18 +33,20 @@ using json = nlohmann::json;
 // #undef TRC_LEVEL
 // #define TRC_LEVEL TRC_L_DEB
 
-namespace Gem
-{
+
+
+
   /// \brief load calibration from file
-  CalibrationFile::CalibrationFile(std::string jsonfile) : CalibrationFile()
+  //CalibrationFile::CalibrationFile(std::string jsonfile) : CalibrationFile()
+  bool CalibrationFile::loadFile(std::string jsonfile)
   {
 
     if (jsonfile.empty())
     {
-      return;
+      return false;
     }
 
-    printf("Loading calibration file %s\n", jsonfile.c_str());
+    // printf("Loading calibration file %s\n", jsonfile.c_str());
 
     std::ifstream t(jsonfile);
     std::string Jsonstring((std::istreambuf_iterator<char>(t)),
@@ -54,9 +56,11 @@ namespace Gem
       printf("Invalid Json file %s\n", jsonfile.c_str());
       throw std::runtime_error(
           "CalibrationFile error - requested file unavailable.");
+      return false;
     }
 
     loadCalibration(Jsonstring);
+    return true;
   }
 
   /// \brief parse json string with calibration data
@@ -88,14 +92,14 @@ namespace Gem
         auto timewalk_cs = vmmcal["timewalk_c"];
         auto timewalk_ds = vmmcal["timewalk_d"];
 
-        printf(
-            "fecid: %lu, vmmid: %lu, adc_offsets(%lu), adc_slopes(%lu), "
-            "time_offsets(%lu), time_slopes(%lu),"
-            "timewalk_as(%lu),timewalk_bs(%lu),"
-            "timewalk_cs(%lu),timewalk_ds(%lu)\n",
-            fecid, vmmid, adc_offsets.size(), adc_slopes.size(),
-            time_offsets.size(), time_slopes.size(), timewalk_as.size(),
-            timewalk_bs.size(), timewalk_cs.size(), timewalk_ds.size());
+        // printf(
+        //     "fecid: %lu, vmmid: %lu, adc_offsets(%lu), adc_slopes(%lu), "
+        //     "time_offsets(%lu), time_slopes(%lu),"
+        //     "timewalk_as(%lu),timewalk_bs(%lu),"
+        //     "timewalk_cs(%lu),timewalk_ds(%lu)\n",
+        //     fecid, vmmid, adc_offsets.size(), adc_slopes.size(),
+        //     time_offsets.size(), time_slopes.size(), timewalk_as.size(),
+        //     timewalk_bs.size(), timewalk_cs.size(), timewalk_ds.size());
 
         if ((adc_offsets.size() > 0 && adc_offsets.size() != MAX_CH) or
             (adc_slopes.size() > 0 && adc_slopes.size() != MAX_CH) or
@@ -227,4 +231,4 @@ namespace Gem
   /*   } */
   /*   return ret; */
   /* } */
-} // namespace Gem
+

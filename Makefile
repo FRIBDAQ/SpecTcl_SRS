@@ -1,4 +1,4 @@
-INSTDIR = /usr/opt/spectcl/5.13-005
+INSTDIR = /usr/opt/spectcl/5.13-010
 INCDIR = $(PWD)/include
 SRCDIR = $(PWD)/src
 
@@ -23,7 +23,8 @@ USERLDFLAGS =
 #   Append your objects to the definitions below:
 #
 
-OBJECTS = $(addprefix $(SRCDIR)/, MySpecTclApp.o CSRSUnpacker.o CSRSCalibrator.o CSRS.o CSRSAnalyzer.o Configuration.o ParserSRS.o SRSTime.o Statistics.o CalibrationFile.o)
+OBJECTS = $(addprefix $(SRCDIR)/, MySpecTclApp.o CSRSUnpacker.o CSRSCalibrator.o CSRS.o \
+	CSRSAnalyzer.o Configuration.o ParserSRS.o SRSTime.o CalibrationFile.o)
 #
 #  Finally the makefile targets.
 #
