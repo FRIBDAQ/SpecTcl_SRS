@@ -54,15 +54,9 @@ CSRSCalibrator::operator()(const Address_t pEvent,
       for (int i = 0; i < srs.nHits; i++)
       {
         auto &d = srs.GetDataRaw(i);
-        if (d.fecTimeStamp > 0)
+        if (d.eventTimeStamp > 0)
         {
-          if (firstTime == 0)
-          {
-            firstTime = d.fecTimeStamp;
-          }
-
-          dataCal[i].timeStamp = d.fecTimeStamp - firstTime;
-          // dataCal[i].timeStamp = d.fecTimeStamp;
+          dataCal[i].timeStamp = d.triggerTimeStamp;
 
           // cout<<"SRSCalibrator - srsTimeStamp after t0 "<<dataCal[i].timeStamp<<" "<<config.pBCTime_ns<<" "<<endl;
           auto cal = calib.getCalibration(d.fecid, d.vmmid, d.chno);
@@ -78,9 +72,11 @@ CSRSCalibrator::operator()(const Address_t pEvent,
 
           // not the same than in vmmdc because here we use ext. trigger 
           // remove all constant terms that ultimately is just a constant, this constant will be calibrated with mask...
-          double chiptime = dataCal[i].timeStamp*config.pBCTime_ns +
-              (static_cast<double>(d.tdc)*static_cast<double>(config.pTAC)/255.0 - cal.time_offset)*cal.time_slope;
-          //  cout<<"SRSCalibrator - corrected time "<<chiptime<<" "<<static_cast<double>(d.bcid)<<" "<<config.pBCTime_ns <<" "<<static_cast<double>(d.tdc) <<" "<<static_cast<double>(config.pTAC)<<" "<<cal.time_offset<<" "<<cal.time_slope <<" "<<endl;
+          double chiptime = static_cast<double>(d.bcid)*config.pBCTime_ns 
+		            + static_cast<double>(d.triggerOffset)*4096.*config.pBCTime_ns
+			    - dataCal[i].timeStamp*config.pBCTime_ns + 1.5*config.pBCTime_ns
+                            - (static_cast<double>(d.tdc)*static_cast<double>(config.pTAC)/255.0 - cal.time_offset)*cal.time_slope;
+          //  cout<<"SRSCalibrator - corrected time "<<chiptime<<" "<<static_cast<double>(d.bcid)<<" "<<config.pBCTime_ns <<" "<<static_cast<double>(d.triggerOffset)<<" "<<dataCal[i].timeStamp<<" "<<static_cast<double>(d.tdc) <<" "<<static_cast<double>(config.pTAC)<<" "<<cal.time_offset<<" "<<cal.time_slope <<" "<<endl;
 
 
           uint16_t corrected_adc = static_cast<uint16_t>(

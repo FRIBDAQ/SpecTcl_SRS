@@ -31,6 +31,8 @@
 
 using namespace std;
 
+int eventTimestamp = 0;
+
 CSRSUnpacker::CSRSUnpacker()
 {
   // parser = nullptr; // Initialize to nullptr initially
@@ -56,33 +58,37 @@ CSRSUnpacker::operator()(const Address_t pEvent,
   // Dont know how to use this smart pointer for parsing the datagram which is not necesarly a sequence of uint32_t.
   /* TranslatorPointer<uint32_t> p(*rDecoder.getBufferTranslator(), pEvent); */
 
-  uint32_t *p = reinterpret_cast<uint32_t *>(pEvent);
+  uint16_t *p = reinterpret_cast<uint16_t *>(pEvent);
   CTclAnalyzer &a(dynamic_cast<CTclAnalyzer &>(rAnalyzer));
 
-  // Cast the RI header
-  // RIwBH* riH = reinterpret_cast<RIwBH*>(pEvent - sizeof(RIwBH));
+  // Trying to find out the event size
+  int eventSize = 0;
+  while (1) {
+    bool isEndOfEvent = *(p + 2) == 0x1e || *(p + 2) == 0x2;
 
-  //get the timestamp of all hits in this event
-  //start at padding and shift left by 32 bits
-  // timeStamp = static_cast<uint64_t>(riH->padding) << 32;
-  // timeStamp |= static_cast<uint64_t>(riH->timeStampLower);
-  // std::cout<<"timeStamp "<<timeStamp<<std::endl;
+    if (isEndOfEvent) {
+      p = p - eventSize/2;
+      break;
+    } else {
+      eventSize += Gem::ParserSRS::HitInRingSize;
+      p = p + Gem::ParserSRS::HitInRingSize/2;
+    }
+  }
 
-
-  uint32_t nbBytes = *p;
+  uint32_t nbBytes = eventSize;
   // nbBytes is an inclusive size
-  auto datalen = nbBytes - sizeof(uint32_t);
+  auto datalen = eventSize;
 
   // fragAndRiHeader: fragment header 20 bytes + ring item header 8 bytes + ring item body header 20 bytes) + 
   // HitAndMarkerSize: ring item body (data) 8 bytes
-  if ((datalen % (fragAndRiHeader + Gem::ParserSRS::HitAndMarkerSize)) != 0)
+  if ((datalen % (Gem::ParserSRS::HitInRingSize)) != 0)
   {
-    cout << "CSRSUnpacker - Error should have 8 bytes of data, datalen "<<datalen<< " is not a multiple of 56 bytes" << endl;
+    cout << "CSRSUnpacker - Error should have bytes of data, datalen "<<datalen<< " is not a multiple of " << Gem::ParserSRS::HitInRingSize << " bytes" << endl;
     return kfFALSE;
   }
-  uint16_t nbHits = datalen / (fragAndRiHeader + Gem::ParserSRS::HitAndMarkerSize);
+  uint16_t nbHits = datalen / Gem::ParserSRS::HitInRingSize;
 
-  // std::cout<<"nbHits datalen "<<nbHits<<" "<<datalen<<std::endl;
+//  std::cout<<"nbHits datalen "<<nbHits<<" "<<datalen<<std::endl;
 
   // // // With C++14 use unique_ptr and make_unique
   // parser = new Gem::ParserSRS(config.maxHits);
@@ -100,7 +106,10 @@ CSRSUnpacker::operator()(const Address_t pEvent,
   // auto elapsed_time_0_s = elapsed_time0.count()/1e9;
   // std::cout<<"elapsed0 "<<elapsed_time_0_s<<std::endl;
 
-  return unpack(p, nbHits);
+  eventTimestamp++;
+
+  uint32_t *q = reinterpret_cast<uint32_t *>(p);
+  return unpack(q, nbHits);
 }
 
 Bool_t
@@ -121,36 +130,32 @@ CSRSUnpacker::unpack(uint32_t *begin,
     while (nbHits > 0)
     {
       // sizeof(uint32_t) for size of body size 
-      auto Data1Offset =  sizeof(uint32_t) + fragAndRiHeader + (fragAndRiHeader + Gem::ParserSRS::HitAndMarkerSize)*readoutIndex;
+      auto Data1Offset = Gem::ParserSRS::HitInRingSize*readoutIndex;
       auto Data2Offset = Data1Offset + Gem::ParserSRS::Data1Size;
       auto Data3Offset = Data2Offset + Gem::ParserSRS::Data2Size;
-      auto headerOffset = Data1Offset - sizeof(RIwBH);
-      RIwBH* riHHit = reinterpret_cast<RIwBH*>(reinterpret_cast<uint8_t *>(begin) + headerOffset);
-      // Assume we can have data comming from different fec.
-      // dirty trick, now sourceId is fecid + 10, so: 
-      parser->data[readoutIndex].fecid = riHHit->sourceId - 10;
-
-      // Timestamping operations are done in udpBroker, no markers expected at this stage.
-      // Shouldn't take the timestamp of build event but instead timestamp in riHHit.
-      // If glom is large enought one can have hits with different timestamps.
-      // Get the timestamp of the hit, start at padding and shift left by 32 bits.
-      uint64_t timeStampHit = static_cast<uint64_t>(riHHit->padding) << 32;
-      timeStampHit |= static_cast<uint64_t>(riHHit->timeStampLower);
-      if (srs.debugMode > 0){
-        std::cout<<"CSRSUnpacker::unpack - timeStampHit: "<<timeStampHit<<std::endl;
-      }
+      auto Data4Offset = Data3Offset + Gem::ParserSRS::Data3Size;
+      // Fix it for 2 ror now
+      parser->data[readoutIndex].fecid = 2;//riHHit->sourceId - 10;
 
       //std::cout<<"data offsets "<<Data1Offset<<" "<<Data2Offset<<" "<<Data3Offset<<std::endl;
       // std::cout<<"riHHit->sourceId and size "<<(int)riHHit->sourceId<<" "<<(int)riHHit->size<<std::endl;
       uint32_t *p1 = reinterpret_cast<uint32_t *>(reinterpret_cast<uint8_t *>(begin) + Data1Offset);
       uint16_t *p2 = reinterpret_cast<uint16_t *>(reinterpret_cast<uint8_t *>(begin) + Data2Offset);
       uint16_t *p3 = reinterpret_cast<uint16_t *>(reinterpret_cast<uint8_t *>(begin) + Data3Offset);
+      uint32_t *p4 = reinterpret_cast<uint32_t *>(reinterpret_cast<uint8_t *>(begin) + Data4Offset);
       uint32_t data1 = htonl(*p1);
       uint16_t data2 = htons(*p2);
       uint16_t data3 = htons(*p3);
+      uint32_t data4 = *p4;
+
+      uint32_t timeStampHit = data4;
+      if (srs.debugMode > 0){
+        std::cout<<"CSRSUnpacker::unpack - timeStampHit: "<<timeStampHit<<std::endl;
+      }
 
       int res = parser->parse(data1, data2, data3, &parser->data[readoutIndex]);
-      parser->data[readoutIndex].fecTimeStamp = timeStampHit;
+      parser->data[readoutIndex].triggerTimeStamp = timeStampHit;
+      parser->data[readoutIndex].eventTimeStamp = eventTimestamp;
 
       //std::cout<<" parse result vmm "<<(int)parser->data[readoutIndex].vmmid<<" chno "<<(int)parser->data[readoutIndex].chno<<" "<<parser->data[readoutIndex].fecTimeStamp<<std::endl;
       if (res == 1)

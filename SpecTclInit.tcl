@@ -2,8 +2,8 @@
 #set DisplayType qtpy
 set DisplayMegabytes 200
  
-set NonDAQHTTPDPort 6675
-set NonDAQMirrorPort 5565
+set NonDAQHTTPDPort 6676
+set NonDAQMirrorPort 5567
 
 lappend auto_path [file join $SpecTclHome TclLibs]
 if {[array names env DAQTCLLIBS]  ne ""} {

@@ -94,6 +94,7 @@ namespace Gem
       vd->vmmid = (data1 >> 22) & 0x1F;
       vd->adc = (data1 >> 12) & 0x3FF;
       vd->bcid = BitMath::gray2bin32(data1 & 0xFFF);
+      vd->triggerOffset = (data1 >> 27) & 0x1F;
       // Added mapped channel to vmm data
       vd->chnoMapped = invertByteOrder(data3);
 

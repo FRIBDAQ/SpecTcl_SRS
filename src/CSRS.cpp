@@ -171,16 +171,16 @@ void CSRS::SetDataRaw(Gem::ParserSRS::VMM3Data *dataArray)
         // printf("SetDataRaw: fec: %d, vmm: %d, channel: %d, channelMapped: %d, overThreshold: %d, adc: %d, tdc: %d, fecTimeStamp: %llu, triggerOffset: %d  \n",d.fecid,d.vmmid, d.chno, chNoMapped, d.overThreshold, d.adc, d.tdc,d.fecTimeStamp,d.triggerOffset);
         if (vmmId < MaxVMMsData && config.pFecVmm[fecId][vmmId])
         {
-            srs.fec[fecId].timeStamp = d.fecTimeStamp;
+            srs.fec[fecId].timeStamp = d.eventTimeStamp;
             srs.fec[fecId].adc[chNoMapped] = d.adc;
             srs.fec[fecId].tdc[chNoMapped] = d.tdc;
             nbHitsFec[fecId] += 1;
             srs.fec[fecId].nHits = nbHitsFec[fecId];
             if (timeStampPrev[fecId] >= 0){
-                srs.fec[fecId].timeStampDiff = d.fecTimeStamp - timeStampPrev[fecId];
+                srs.fec[fecId].timeStampDiff = d.eventTimeStamp - timeStampPrev[fecId];
                 // std::cout<<"Simon - TSdiff "<<srs.fec[fecId].timeStampDiff<<std::endl;
             }
-            timeStampPrev[fecId] = d.fecTimeStamp;
+            timeStampPrev[fecId] = d.eventTimeStamp;
         }
         else
         {

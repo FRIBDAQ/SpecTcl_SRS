@@ -43,9 +43,11 @@ namespace Gem
     virtual ~ParserSRS();
     // bytes
     static const int SRSHeaderSize{16};
-    static const int HitAndMarkerSize{8};
+    static const int HitInRingSize{12};
+    static const int HitAndMarkerSize{6};
     static const int Data1Size{4};
     static const int Data2Size{2};
+    static const int Data3Size{2};
 
     ///< Do NOT rearrange fields, used for casting to data pointer
     struct SRSHeader
@@ -89,7 +91,8 @@ namespace Gem
     // };
     struct VMM3Data
     {
-      uint64_t fecTimeStamp; /// 42 bits can change within a packet so must be here
+      uint64_t triggerTimeStamp; /// 42 bits can change within a packet so must be here
+      uint64_t eventTimeStamp; /// 42 bits can change within a packet so must be here
       uint16_t bcid;         /// 12 bit - bcid after graydecode
       uint16_t adc;          /// 10 bit - adc value from vmm readout
       uint8_t tdc;           ///  8 bit - tdc value from vmm readout
