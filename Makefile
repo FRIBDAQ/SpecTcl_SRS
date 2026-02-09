@@ -1,4 +1,4 @@
-INSTDIR = /usr/opt/spectcl/5.13-010
+INSTDIR = /usr/opt/spectcl/5.13-012
 INCDIR = $(PWD)/include
 SRCDIR = $(PWD)/src
 
@@ -9,7 +9,7 @@ include $(INSTDIR)/etc/SpecTcl_Makefile.include
 
 USERCXXFLAGS = -std=c++11 -I$(INCDIR)
 # Include path for nlohmann/json library
-USERCXXFLAGS += -I/simon/SRS/json/include
+USERCXXFLAGS += -I$(PWD)/json_include
 
 #  If you have any switches you need to add to the default c compilation rules,
 #  add them to the defintion below:

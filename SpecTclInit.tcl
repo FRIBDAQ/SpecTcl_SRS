@@ -1,5 +1,5 @@
 # comment out first line for xamine
-set DisplayType qtpy
+#set DisplayType qtpy
 set DisplayMegabytes 200
  
 set NonDAQHTTPDPort 6675

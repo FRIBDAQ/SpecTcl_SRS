@@ -1,6 +1,5 @@
 #Similar args than in the runConversion.py file used with vmm-sdat.
-'../build/convertFile', '-geo', './jsonSRS/example_geometry_xyu.json', '-bc', '44.5', '-tac', '60', '-th','0', '-cs','1', '-ccs', '3', '-dt', '200', '-mst', '1', '-spc', '500', '-dp', '200', '-coin', 'center-of-masss', '-crl', '0.2', '-cru', '10', '-save', '[[0],[0],[0]]', '-algo', '4', '-info', 'xyu', '-cal', 'jsonSRS/joined_calib_102541.json', '-df','SRS'
+'../build/convertFile', '-geo', './jsonSRS/S800_CRDC_remapped_2026.json', '-bc', '44.5', '-tac', '60', '-th','0', '-cs','1', '-ccs', '3', '-dt', '200', '-mst', '1', '-spc', '500', '-dp', '200', '-coin', 'center-of-masss', '-crl', '0.2', '-cru', '10', '-save', '[[0,1],[0,1],[]]', '-algo', '4', '-info', 'xyu', '-cal', 'jsonSRS/calib_07_18_2024_timewalk.json', '-df','SRS'
 
 #Additionnal args to set specTcl with only the relevent fec and vmm, significantly improve specTcl loading time.
-'-fecAndVmm', '[] [] [8,9,10,11,12,13,14,15] [] [] [] [] [] [] [] [] [] [] [] [] []'
-#'-fecAndVmm', '[] [] [4,5,6,7] [] [] [] [] [] [] [] [] [] [] [] [] []'
+'-fecAndVmm', '[] [] [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15] [] [] [] [] [] [] [] [] [] [] [] [] []'
