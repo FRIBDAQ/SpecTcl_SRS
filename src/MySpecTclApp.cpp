@@ -12,6 +12,7 @@ static const char* Copyright = "(C) Copyright Michigan State University 2008, Al
 
 #include "Configuration.h"
 #include "CSRS.h"
+#include "CVME.h"
 #include "CalibrationFile.h"
 #include "CSRSUnpacker.h"
 #include "CSRSCalibrator.h"
@@ -25,6 +26,8 @@ using namespace std;
 Configuration config("config");
 //CSRS: where the data used in the treegui are defined
 CSRS srs("srs");
+//CVME: where the data used in the treegui are defined
+CVME vme("vme");
 //Gem::CalibrationFile class to load the calibrations from a file
 CalibrationFile calib;
 //CSRSUnpacker: unpacks and sets variables in srs class
@@ -87,6 +90,8 @@ CMySpecTclApp::CMySpecTclApp ()
   else{
     printf("Calibrations not loaded");
   } 
+
+  vme.Initialize();
 } 
 
 	// Destructor:

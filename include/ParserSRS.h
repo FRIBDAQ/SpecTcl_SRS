@@ -44,7 +44,7 @@ namespace Gem
     // bytes
     static const int SRSHeaderSize{16};
     static const int HitInRingSize{12};
-    static const int HitAndMarkerSize{6};
+    static const int HitAndMarkerSize{8};
     static const int Data1Size{4};
     static const int Data2Size{2};
     static const int Data3Size{2};

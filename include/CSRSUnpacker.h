@@ -26,6 +26,44 @@
 
 #include "ParserSRS.h"
 
+static const uint32_t ALLH_TYPEMASK(0x7000000);
+static const uint32_t ALLH_TYPESHIFT(24);
+static const uint32_t ALLH_GEOMASK(0xf8000000);
+static const uint32_t ALLH_GEOSHIFT(27);
+
+    // High part of header.
+
+static const uint32_t HDRH_CRATEMASK(0x00ff0000);
+static const uint32_t HDRH_CRATESHIFT(16);
+
+    // Low part of header.
+static const uint32_t HDRL_COUNTMASK(0X3f00);
+static const uint32_t HDRL_COUNTSHIFT(8);
+
+    // High part of data:
+
+static const uint32_t DATAH_CHANMASK(0x3f0000);
+static const uint32_t DATAH_CHANSHIFT(16);
+
+    // Low part of data
+
+static const uint32_t DATAL_UNBIT(0x2000);
+static const uint32_t DATAL_OVBIT(0x1000);
+static const uint32_t DATAL_VBIT(0x40000);
+static const uint32_t DATAL_DATAMASK(0x0fff);
+
+    //  High part of trailer:- index in event to the first unprocessed word of the event.
+
+static const uint32_t TRAILH_EVHIMASK(0x00ff0000);
+
+    // Word types:
+
+static const uint32_t HEADER(2);
+static const uint32_t DATA(0);
+static const uint32_t TRAILER(4);
+static const uint32_t INVALID(6);
+
+
 class CSRSUnpacker : public CEventProcessor
 {
 private:
@@ -80,8 +118,12 @@ public:
                             CAnalyzer &rAnalyzer,
                             CBufferDecoder &rDecoder);
 
-  Bool_t unpack(std::uint32_t *begin,
-                std::uint16_t sizeInNbHit);
+  uint32_t *unpack(std::uint32_t *begin,
+                   std::uint16_t sizeInNbHit,
+                   std::uint32_t &offset);
+
+  uint32_t *unpackVME(std::uint32_t *begin,
+                      std::uint32_t &offset);
 
   static const int fragAndRiHeader{48};
   static const int fragHeader{20};

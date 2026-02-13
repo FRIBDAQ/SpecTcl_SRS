@@ -23,7 +23,7 @@ USERLDFLAGS =
 #   Append your objects to the definitions below:
 #
 
-OBJECTS = $(addprefix $(SRCDIR)/, MySpecTclApp.o CSRSUnpacker.o CSRSCalibrator.o CSRS.o \
+OBJECTS = $(addprefix $(SRCDIR)/, MySpecTclApp.o CSRSUnpacker.o CSRSCalibrator.o CSRS.o CVME.o \
 	CSRSAnalyzer.o Configuration.o ParserSRS.o SRSTime.o CalibrationFile.o)
 #
 #  Finally the makefile targets.
