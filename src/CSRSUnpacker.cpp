@@ -111,10 +111,10 @@ CSRSUnpacker::operator()(const Address_t pEvent,
         break;
     }
 
-    if (nbBytes == offset)
+    if (nbBytes == offset) {
+      eventTimestamp++;
       return kfTRUE;
-    else
-      return kfFALSE;
+    }
   }
 }
 
